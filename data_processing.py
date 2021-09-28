@@ -9,6 +9,7 @@ def read_data(data_file):
                      'ON Trading_session.id=Chart_data.session_id', connection)
     df['datetime'] = pd.to_datetime(df.time + ' ' + df.date, format='%H:%M:%S %Y-%m-%d')
     df['just_time'] = pd.to_datetime(df.time, format='%H:%M:%S')
+    df['just_time'] = df[['just_time', 'platform_id']].apply(lambda x: x[0] - pd.Timedelta(hours=x[1] - 1), axis=1)
     df['month'] = df['datetime'].apply(lambda x: x.month)
     df['year'] = df['datetime'].apply(lambda x: x.year)
     return df.drop(['date', 'time', 'id'], axis=1)
@@ -24,7 +25,7 @@ def with_big_monthly_sessions(df):
 def collect_sessions_data(df, minutes_delta=5):
     start_time = pd.to_datetime('11:00:00', format='%H:%M:%S')
     data = {session: [None] for session in df.session_id.unique()}
-    for i in range(2 * 60 // minutes_delta):
+    for i in range(60 // minutes_delta):
         left, right = start_time + pd.Timedelta(minutes=i * minutes_delta), start_time + pd.Timedelta(minutes=(i + 1) * minutes_delta)
         df_in_range = df[df.just_time.apply(lambda x: left <= x <= right)]
         for session, values in data.items():
@@ -36,6 +37,6 @@ def collect_sessions_data(df, minutes_delta=5):
     for session, values in data.items():
         for i in range(len(values) - 1, 0, -1):
             if values[i] is None:
-                values[i] = values[i + 1]
+                values[i] = values[i + 1] if i + 1 < len(values) else 0
         data[session] = np.array(values[1:])
     return data
