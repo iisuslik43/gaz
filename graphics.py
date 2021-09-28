@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from sklearn.cluster import DBSCAN
 import numpy as np
 
 
@@ -30,7 +29,12 @@ def draw(data, df, clusters=None):
     sessions_month = {session: df[df.session_id == session].month.values[0] for session in data.keys()}
     sessions_year = {session: df[df.session_id == session].year.values[0] for session in data.keys()}
     sessions_platform = {session: df[df.session_id == session].platform_id.values[0] for session in data.keys()}
-    colors = [np.random.rand(3,) for i in range(len(set(clusters)))]
+    if len(set(clusters)) > 6:
+        colors = [np.random.rand(3,) for i in range(len(set(clusters)))]
+    else:
+        colors = ['r', 'g', 'b', 'c', 'y', 'n']
+    if -1 in set(clusters):
+        colors = colors[:-1] + [np.array([0.8] * 3)]
     plt.figure(figsize=(10, 10))
     if clusters is None:
         clusters = [0] * len(data)
